@@ -488,7 +488,10 @@ Surfly.init(settings, function (initResult) {
                                 background-repeat: no-repeat !important;
                                 background-size: 70%;
                                 height: 85px !important;
-                            }
+                            },
+                            [data-selector="ACTIVITY_BAR"] {
+                                display: none !important;
+                        }                            
 
                             /* ── Reply box (bot vs. agent) ── */
                             ${replyBoxCss}
