@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CXone Chat Widget — Training Demo</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --ink:      #1C1C1E;
+      --ink-mid:  #3A3A3C;
+      --ink-soft: #6C6C70;
+      --cream:    #F5F0E8;
+      --cream-dk: #EBE5D8;
+      --purple:    #683FE9;
+      --purple-lt: #8467EF;
+      --purple-dk: #4B2CB0;
+      --white:    #FFFFFF;
+      --header-h: 68px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      line-height: 1.7;
+    }
+
+    /* ── TRAINING BANNER ── */
+    .training-banner {
+      background: var(--purple);
+      color: var(--white);
+      text-align: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      padding: 0.45rem 1rem;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: fixed;
+      top: 28px; /* offset below training banner */
+      left: 0; right: 0;
+      height: var(--header-h);
+      z-index: 100;
+      background: rgba(245,240,232,0.96);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(28,28,30,0.08);
+    }
+    .header-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: 0.5px;
+      display: flex;
+      flex-direction: column;
+      line-height: 1;
+    }
+    .logo-sub {
+      font-size: 0.6rem;
+      font-family: 'DM Sans', sans-serif;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--purple);
+      font-weight: 500;
+      margin-top: 3px;
+    }
+    nav {
+      display: flex;
+      gap: 2.2rem;
+      align-items: center;
+    }
+    nav a {
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--ink-mid);
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--purple); }
+
+    .btn {
+      display: inline-block;
+      padding: 0.55rem 1.5rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-decoration: none;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .btn-dark {
+      background: var(--ink);
+      color: var(--white);
+    }
+    .btn-dark:hover { background: var(--ink-mid); }
+    .btn-teal {
+      background: var(--purple);
+      color: var(--white);
+    }
+    .btn-teal:hover { background: var(--purple-lt); }
+    .btn-outline {
+      background: transparent;
+      color: var(--white);
+      border: 1px solid rgba(255,255,255,0.55);
+    }
+    .btn-outline:hover { background: rgba(255,255,255,0.12); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid rgba(28,28,30,0.3);
+    }
+    .btn-ghost:hover { border-color: var(--purple); color: var(--purple); }
+
+    /* ── HERO ── */
+    .hero {
+      margin-top: calc(var(--header-h) + 28px);
+      min-height: 88vh;
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      background: var(--ink);
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(160deg, #140a30 0%, #2a1866 40%, #4a2cc0 75%, #683FE9 100%);
+    }
+    /* Decorative grain overlay */
+    .hero-bg::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    /* Decorative circle accent */
+    .hero-circle {
+      position: absolute;
+      right: -120px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      border: 1px solid rgba(104,63,233,0.3);
+      box-shadow: 0 0 0 60px rgba(104,63,233,0.04),
+                  0 0 0 130px rgba(104,63,233,0.03);
+    }
+    .hero-circle-inner {
+      position: absolute;
+      inset: 80px;
+      border-radius: 50%;
+      border: 1px solid rgba(104,63,233,0.2);
+    }
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 1180px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 0 2rem 6rem;
+    }
+    .hero-eyebrow {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 3.5px;
+      text-transform: uppercase;
+      color: var(--purple-lt);
+      margin-bottom: 1rem;
+    }
+    .hero h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.8rem, 6.5vw, 5rem);
+      font-weight: 300;
+      color: var(--white);
+      line-height: 1.08;
+      max-width: 680px;
+      margin-bottom: 1.75rem;
+    }
+    .hero h1 em {
+      font-style: italic;
+      color: var(--purple-lt);
+    }
+    .hero p {
+      color: rgba(255,255,255,0.65);
+      font-size: 1rem;
+      max-width: 480px;
+      margin-bottom: 2.5rem;
+      font-weight: 300;
+    }
+    .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+    /* ── DIVIDER ── */
+    .rule { width: 44px; height: 1.5px; background: var(--purple); margin: 1.25rem 0; }
+
+    /* ── SECTION ── */
+    .section { padding: 5.5rem 2rem; }
+    .container { max-width: 1180px; margin: 0 auto; }
+    .section-label {
+      font-size: 0.68rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--purple);
+      font-weight: 600;
+      margin-bottom: 0.6rem;
+    }
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.9rem, 3.5vw, 3rem);
+      font-weight: 400;
+      color: var(--ink);
+      line-height: 1.2;
+    }
+    .section-sub {
+      color: var(--ink-soft);
+      max-width: 540px;
+      font-size: 0.97rem;
+      font-weight: 300;
+    }
+
+    /* ── INTRO ── */
+    .intro { background: var(--white); }
+    .intro-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6rem;
+      align-items: center;
+    }
+    .intro-visual {
+      aspect-ratio: 4/3;
+      border-radius: 3px;
+      background: linear-gradient(145deg, #140a30, #4a2cc0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+      color: rgba(255,255,255,0.2);
+      letter-spacing: -2px;
+      position: relative;
+      overflow: hidden;
+    }
+    .intro-visual::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 60% 50%, rgba(132,103,239,0.25), transparent);
+    }
+
+    /* ── FEATURE STRIP ── */
+    .features { background: var(--cream-dk); }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      border: 1px solid rgba(28,28,30,0.1);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 3rem;
+    }
+    .feature-item {
+      padding: 2.5rem 2rem;
+      border-right: 1px solid rgba(28,28,30,0.1);
+      transition: background 0.25s;
+    }
+    .feature-item:last-child { border-right: none; }
+    .feature-item:hover { background: rgba(104,63,233,0.05); }
+    .feature-icon {
+      font-size: 1.6rem;
+      margin-bottom: 1rem;
+    }
+    .feature-item h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 0.5rem;
+    }
+    .feature-item p {
+      font-size: 0.88rem;
+      color: var(--ink-soft);
+      font-weight: 300;
+      line-height: 1.65;
+    }
+
+    /* ── QUOTE BAND ── */
+    .quote-band {
+      background: var(--ink);
+      padding: 5rem 2rem;
+      text-align: center;
+    }
+    blockquote {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+      font-weight: 300;
+      font-style: italic;
+      color: rgba(255,255,255,0.85);
+      max-width: 720px;
+      margin: 0 auto 1.25rem;
+      line-height: 1.55;
+    }
+    .quote-attr {
+      font-size: 0.75rem;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--purple-lt);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: #150c30;
+      color: rgba(255,255,255,0.55);
+    }
+    .footer-main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 3.5rem 2rem 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 3rem;
+      flex-wrap: wrap;
+    }
+    .footer-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--white);
+    }
+    .footer-tagline {
+      font-size: 0.82rem;
+      margin-top: 0.6rem;
+      max-width: 220px;
+      font-weight: 300;
+    }
+    .footer-col h4 {
+      font-size: 0.65rem;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--purple-lt);
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+    .footer-col a {
+      display: block;
+      text-decoration: none;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.82rem;
+      font-weight: 300;
+      margin-bottom: 0.5rem;
+      transition: color 0.2s;
+    }
+    .footer-col a:hover { color: var(--white); }
+    .footer-bottom {
+      background: #0c0720;
+      padding: 1rem 2rem;
+      text-align: center;
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.25);
+      display: flex;
+      justify-content: center;
+      gap: 2.5rem;
+      flex-wrap: wrap;
+    }
+    .footer-bottom a { color: rgba(255,255,255,0.25); text-decoration: none; }
+    .footer-bottom a:hover { color: rgba(255,255,255,0.5); }
+
+    @media (max-width: 860px) {
+      .intro-grid        { grid-template-columns: 1fr; gap: 3rem; }
+      .features-grid     { grid-template-columns: 1fr; }
+      .feature-item      { border-right: none; border-bottom: 1px solid rgba(28,28,30,0.1); }
+      .feature-item:last-child { border-bottom: none; }
+      nav                { display: none; }
+    }
+  </style>
+  <!-- ── SNIPPET START ─────────────────────────────────────────── -->
+<script>
+(function(n,u){
+    window.CXoneDfo=n,
+    window[n]=window[n]||function(){(window[n].q=window[n].q||[]).push(arguments)},window[n].u=u,
+    e=document.createElement("script"),e.type="module",e.src=u+"?"+Math.round(Date.now()/1e3/3600),
+    document.head.appendChild(e)
+    })('cxone','https://web-modules-de-na1.niceincontact.com/loader/1/loader.js');
+
+cxone('init', '1792');
+cxone('guide','init');
+</script>
+  <!-- ── SNIPPET END ───────────────────────────────────────────── -->
+
+</head>
+<body>
+
+  <!-- Training environment indicator -->
+  <div class="training-banner">⚙ CXone Training &amp; Demo Environment — Not for Production Use</div>
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        Horizon
+        <span class="logo-sub">Resort &amp; Spa</span>
+      </div>
+      <nav>
+        <a href="#">Accommodations</a>
+        <a href="#">Experiences</a>
+        <a href="#">Dining</a>
+        <a href="#">Wellness</a>
+        <a href="#">Contact</a>
+      </nav>
+      <a href="#" class="btn btn-dark">Reserve a Stay</a>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-circle">
+      <div class="hero-circle-inner"></div>
+    </div>
+    <div class="hero-content">
+      <p class="hero-eyebrow">A world apart</p>
+      <h1>Find your
+<em>perfect</em> escape</h1>
+      <p>Unhurried days, warm hospitality, and surroundings designed to restore — everything you need, nothing you don't.</p>
+      <div class="hero-actions">
+        <a href="#" class="btn btn-teal">Explore Stays</a>
+        <a href="#" class="btn btn-outline">View Experiences</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTRO -->
+  <section class="section intro">
+    <div class="container intro-grid">
+      <div>
+        <p class="section-label">About the Property</p>
+        <h2 class="section-title">A retreat shaped around you</h2>
+        <div class="rule"></div>
+        <p class="section-sub">Nestled in a landscape of quiet beauty, Horizon offers a seamless blend of comfort and discovery. From curated culinary experiences to open-air wellness, every detail has been thoughtfully considered.</p>
+        <div style="margin-top:2.25rem; display:flex; gap:1rem; flex-wrap:wrap;">
+          <a href="#" class="btn btn-dark">Learn More</a>
+          <a href="#" class="btn btn-ghost">Virtual Tour</a>
+        </div>
+      </div>
+      <div class="intro-visual">🌿</div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section features">
+    <div class="container">
+      <p class="section-label">What Awaits</p>
+      <h2 class="section-title">Every comfort. Every detail.</h2>
+      <div class="features-grid">
+        <div class="feature-item">
+          <div class="feature-icon">🏊</div>
+          <h3>Infinity Pool</h3>
+          <p>Drift between land and sky in our signature overwater pool with panoramic views of the surrounding landscape.</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🌿</div>
+          <h3>Spa & Wellness</h3>
+          <p>Holistic treatments rooted in local traditions — designed to quiet the mind and restore the body.</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🍽️</div>
+          <h3>Curated Dining</h3>
+          <p>Chef-led menus celebrating regional ingredients, served in open-air settings from dawn to dusk.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUOTE BAND -->
+  <section class="quote-band">
+    <div class="container">
+      <blockquote>"From the moment we arrived, everything felt effortless. The kind of place that makes you forget what day it is — in the best possible way."</blockquote>
+      <p class="quote-attr">— A.R., Verified Guest</p>
+      <div style="margin-top:2.5rem;">
+        <a href="#" class="btn btn-teal">Read Guest Stories</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-main">
+      <div>
+        <div class="footer-logo">Horizon Resort &amp; Spa</div>
+        <p class="footer-tagline">A place apart, designed to restore.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Explore</h4>
+        <a href="#">Accommodations</a>
+        <a href="#">Dining</a>
+        <a href="#">Wellness</a>
+        <a href="#">Experiences</a>
+        <a href="#">Special Offers</a>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <a href="#">Contact Us</a>
+        <a href="#">Reservations</a>
+        <a href="#">FAQs</a>
+        <a href="#">Cancellation Policy</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <a href="tel:18005550100">📞 1-800-555-0100</a>
+        <a href="mailto:hello@horizonresort.example">✉️ hello@horizonresort.example</a>
+        <a href="#">📍 Location Placeholder</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms &amp; Conditions</a>
+      <span>© 2026 Horizon Resort &amp; Spa — Training Demo. Not a real property.</span>
+    </div>
+  </footer>
+
+</body>
+</html>
