@@ -10,6 +10,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 
   <style>
+    /* Raises the CXone chat widget above the Surfly cobrowse overlay */
+.be-template {
+    z-index: 2147483549 !important;
+}
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
@@ -406,15 +410,40 @@
   </style>
   <!-- ── SNIPPET START ─────────────────────────────────────────── -->
 <script>
-(function(n,u){
-    window.CXoneDfo=n,
-    window[n]=window[n]||function(){(window[n].q=window[n].q||[]).push(arguments)},window[n].u=u,
-    e=document.createElement("script"),e.type="module",e.src=u+"?"+Math.round(Date.now()/1e3/3600),
-    document.head.appendChild(e)
-    })('cxone','https://web-modules-de-na1.niceincontact.com/loader/1/loader.js');
+(function (s, u, r, f, l, y) {
+    s[f] = s[f] || { init: function () { s[f].q = arguments; } };
+    l = u.createElement(r);
+    y = u.getElementsByTagName(r)[0];
+    l.async = 1;
+    l.src = "https://surfly.com/surfly.js";
+    y.parentNode.insertBefore(l, y);
+})(window, document, "script", "Surfly");
 
-cxone('init', '1792');
-cxone('guide','init');
+Surfly.init({ widget_key: "YOUR_WIDGET_KEY" }, function (initResult) {
+    if (initResult.success) {
+        if (!Surfly.isInsideSession) {
+
+            // ✅ CXone loader goes HERE — inside Surfly's callback
+            (function (n, u) {
+                window.CXoneDfo = n;
+                window[n] = window[n] || function () { (window[n].q = window[n].q || []).push(arguments); };
+                window[n].u = u;
+                var e = document.createElement("script");
+                e.type = "module";
+                e.src = u + "?" + Math.round(Date.now() / 1e3 / 3600);
+                e.onload = function () {
+                    // All cxone() calls go here, inside onload
+                    cxone('init', '1792');
+                    cxone('guide', 'init');
+                    // ... additional configuration
+                };
+                document.head.appendChild(e);
+            })('cxone', 'https://web-modules-de-na1.niceincontact.com/loader/1/loader.js');
+          
+
+        }
+    }
+});
 </script>
   <!-- ── SNIPPET END ───────────────────────────────────────────── -->
 
