@@ -419,28 +419,172 @@
     y.parentNode.insertBefore(l, y);
 })(window, document, "script", "Surfly");
 
-Surfly.init({ widget_key: "d01c1280d1f64e04b6303b49802e209c" }, function (initResult) {
+var settings = {
+    widget_key: "d01c1280d1f64e04b6303b49802e209c",
+};
+
+Surfly.init(settings, function (initResult) {
     if (initResult.success) {
         if (!Surfly.isInsideSession) {
 
-            // ✅ CXone loader goes HERE — inside Surfly's callback
-            (function(n,u){
-              window.CXoneDfo=n,
-              window[n]=window[n]||function(){(window[n].q=window[n].q||[]).push(arguments)},window[n].u=u,
-              e=document.createElement("script"),e.type="module",e.src=u+"?"+Math.round(Date.now()/1e3/3600),
-              document.head.appendChild(e)
-              })('cxone','https://web-modules-de-na1.niceincontact.com/loader/1/loader.js');
-          
-          cxone('init', '1792');
-          cxone('guide','init');
-                    // ... additional configuration
-                };
-                document.head.appendChild(e);
-            }   
+            // ── Load CXone only after Surfly is ready ──────────────────────────
+            (function (n, u) {
+                window.CXoneDfo = n;
+                window[n] = window[n] || function () { (window[n].q = window[n].q || []).push(arguments); };
+                window[n].u = u;
+                var e = document.createElement("script");
+                e.type = "module";
+                e.src = u + "?" + Math.round(Date.now() / 1e3 / 3600);
 
-        }
+                e.onload = function () {
+                    cxone('init', '1792');
+                    cxone('guide', 'init');
+                    cxone('guide', 'setDesiredGuideWidth', '400px');
+                    cxone('guide', 'setDesiredGuideHeight', '600px');
+                    cxone('guide', 'setButtonSize', '70px');
+
+                    cxone('chat', 'hideAssignedAgent');
+
+                    // Required: enables the push update stream so onAnyPushUpdate fires
+                    cxone("chat", "setAllowedExternalMessageTypes", [
+                        "MESSAGE_SENT",
+                        "MESSAGE_RECEIVED",
+                    ]);
+
+                    // ── Bot/agent reply box toggle ─────────────────────────────
+                    // ⚠️ setCustomCss is a FULL override — every call replaces all
+                    // previously applied CSS. All widget styles (branding + reply
+                    // box) must live inside this single function so nothing gets
+                    // wiped when botMode changes.
+                    // Use the agentId — this is the ID visible in CXone UserHub
+                    // (ACD → Users, search "bot"). The internal `id` field in the
+                    // payload is a different system ID not exposed in the UI.
+                    var BOT_USER_ID = 69381993;
+                    var isBotMode = false;
+
+                    function applyAllChatCss(botMode) {
+                        var replyBoxCss = botMode
+                            ? `
+                                [data-selector="REPLY_BOX"],
+                                [data-selector="TEXTAREA"],
+                                [data-selector="INPUT"],
+                                [data-selector="SEND_BUTTON"] {
+                                    display: none !important;
+                                }
+                              `
+                            : `
+                                [data-selector="REPLY_BOX"],
+                                [data-selector="TEXTAREA"],
+                                [data-selector="INPUT"],
+                                [data-selector="SEND_BUTTON"] {
+                                    display: revert !important;
+                                }
+                              `;
+
+                        cxone("chat", "setCustomCss", `
+                            /* ── Branding ── */
+                            [data-selector="HEADER"] {
+                                background-image: url("https://images.contentstack.io/v3/assets/blt440de00c5519ec3c/blt36649ad5e4aeb190/685c1cd4eff8a306ad9f0106/Logo_VW-2100x702-arriba.png?width=3840&quality=75&format=webp") !important;
+                                background-repeat: no-repeat !important;
+                                background-size: 70%;
+                                height: 85px !important;
+                            }
+
+                            /* ── Reply box (bot vs. agent) ── */
+                            ${replyBoxCss}
+                        `);
+                    }
+
+                    // Apply full CSS on load — reply box visible, bot mode off
+                    setTimeout(() => applyAllChatCss(false), 500);
+
+                    // Re-apply full CSS on every assignee change
+                    cxone("chat", "onAnyPushUpdate", function (payload) {
+
+                        // ── BOT ID DISCOVERY LOGGING ───────────────────────────
+                        // Activate by adding ?cxdebug to the page URL.
+                        // Remove once all bot IDs are confirmed.
+                        var CX_DEBUG = window.location.search.includes('cxdebug');
+                        if (CX_DEBUG && payload?.eventType === "CaseInboxAssigneeChanged") {
+                            var _user = payload?.data?.case?.inboxAssigneeUser;
+                            var _id   = payload?.data?.case?.inboxAssignee;
+                            console.group("[CXone] CaseInboxAssigneeChanged");
+                            console.log("agentId (UserHub-visible):  ", payload?.data?.inboxAssignee?.agentId);
+                            console.log("inboxAssigneeUser.isBotUser:", _user?.isBotUser);
+                            console.log("inboxAssigneeUser.firstName:", _user?.firstName);
+                            console.log("loginUsername:              ", payload?.data?.inboxAssignee?.loginUsername);
+                            console.log("nickname:                   ", payload?.data?.inboxAssignee?.nickname);
+                            console.log("── Full payload ──");
+                            console.log(JSON.parse(JSON.stringify(payload)));
+                            console.groupEnd();
+                        }
+                        // ── END LOGGING ────────────────────────────────────────
+
+                        if (payload?.eventType !== "CaseInboxAssigneeChanged") return;
+
+                        var assigneeUser = payload?.data?.case?.inboxAssigneeUser;
+                        // agentId is the UserHub-visible ID (ACD → Users).
+                        // inboxAssignee.id is an internal system ID not shown in the UI.
+                        var agentId = payload?.data?.inboxAssignee?.agentId;
+
+                        var botMode =
+                            assigneeUser?.isBotUser === true ||
+                            agentId === BOT_USER_ID;
+
+                        if (botMode === isBotMode) return; // no change, skip re-render
+                        isBotMode = botMode;
+                        applyAllChatCss(isBotMode);
+                    });
+
+                }; // ── END e.onload ──────────────────────────────────────────────
+
+                document.head.appendChild(e);
+            })('cxone', 'https://web-modules-de-na1.niceincontact.com/loader/1/loader.js');
+            // ── END CXone loader IIFE ──────────────────────────────────────────
+
+            // Wire footer Cobrowse link to start Surfly session.
+            // Lives outside the CXone IIFE but inside !Surfly.isInsideSession so
+            // both Surfly and CXone are guaranteed initialized before this runs.
+            // DOMContentLoaded guard needed because Surfly.init may resolve before
+            // the footer element exists in the DOM.
+            function attachCobrowseLink() {
+                var link = document.getElementById('cobrowse-link');
+                if (link) {
+                    link.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        console.log('Cobrowse link clicked', new Date().toISOString());
+                        Surfly.session({
+                            non_hosts_can_open_tabs: false,
+                            hide_session_ui: false
+                        }).startLeader();
+                    });
+                }
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', attachCobrowseLink);
+            } else {
+                attachCobrowseLink();
+            }
+
+        } // ── END !Surfly.isInsideSession ───────────────────────────────────────
+    } else {
+        console.log("Surfly was unable to initialize properly.");
     }
-});
+}); // ── END Surfly.init ───────────────────────────────────────────────────────
+
+// Focus ring color fix — applied after CXone renders its container
+setTimeout(function () {
+    var style = document.createElement('style');
+    style.innerHTML = `
+        #cxone-guide-container [data-selector="GUIDE_CHANNEL_BUTTON"]:focus,
+        #cxone-guide-container [data-selector="GUIDE_CHANNEL_BUTTON"]:active,
+        #cxone-guide-container [data-selector="GUIDE_CHANNEL_BUTTON"]:focus-visible {
+            outline-color: #D0066B !important;
+            outline-width: 2px !important;
+        }
+    `;
+    document.head.appendChild(style);
+}, 1000);
 </script>
   <!-- ── SNIPPET END ───────────────────────────────────────────── -->
 
